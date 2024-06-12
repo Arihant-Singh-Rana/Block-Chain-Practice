@@ -181,8 +181,27 @@ G = S256Point(0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
 
 # Creating Signature Class
 class Signature:
+
     def __init__(self, r, s): 
         self.r = r
         self.s = s
     def __repr__(self):
-        return 'Signature({:x},{:x})'.format(self.r, self.s) 
+        return 'Signature({:x},{:x})'.format(self.r, self.s)
+
+# Now creating a Class for  housing our Privat Key
+from random import randint
+class PrivateKey:
+    def __init__(self, secret): 
+        self.secret = secret 
+        self.point = secret * G # This is the Public Key 'P = K*G'
+    def hex(self):
+        return '{:x}'.format(self.secret).zfill(64)
+    
+    def sign(self, z):
+        k = randint(0, N) # Usage of randint is not encouraged the 'k' integer generated is not random enough
+        r = (k*G).x.num
+        k_inv = pow(k, N-2, N)
+        s = (z + r*self.secret) * k_inv % N 
+        if s > N/2: # To remove the melleability and bring the s to the lower half
+            s=N-s
+        return Signature(r, s)
